@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import main.repository.Repos;
 import searchengine.builders.SiteBuilder;
 import searchengine.model.Site;
+import searchengine.model.SiteType;
 
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -25,9 +26,9 @@ public class StatisticsResponse extends Response {
             detailed = new ArrayList<>();
 
             List<Site> sites = Repos.siteRepo.findAll().stream()
-                    .filter(site -> site.getType().equals(Site.INDEXED) ||
-                            site.getType().equals(Site.FAILED) ||
-                            site.getType().equals(Site.INDEXING))
+                    .filter(site -> site.getType().equals(SiteType.INDEXED) ||
+                            site.getType().equals(SiteType.FAILED) ||
+                            site.getType().equals(SiteType.INDEXED))
                     .toList();
             for (Site site : sites) {
                 DetailedStatistics detailedStatistics = new DetailedStatistics(site);
@@ -44,11 +45,11 @@ public class StatisticsResponse extends Response {
         private boolean isIndexing;
 
         public TotalStatistics() {
-            int siteCount = Repos.siteRepo.countByType(Site.INDEXED) +
-                    Repos.siteRepo.countByType(Site.FAILED);
+            int siteCount = Repos.siteRepo.countByType(String.valueOf(SiteType.INDEXED)) +
+                    Repos.siteRepo.countByType(String.valueOf(SiteType.FAILED));
             setSites(siteCount);
 
-            List<Site> indexedSites = Repos.siteRepo.findAllByType(Site.INDEXED);
+            List<Site> indexedSites = Repos.siteRepo.findAllByType(String.valueOf(SiteType.INDEXED));
             setPages(Repos.pageRepo.countBySites(indexedSites));
             setLemmas(Repos.lemmaRepo.countBySites(indexedSites));
 
@@ -69,7 +70,7 @@ public class StatisticsResponse extends Response {
         public DetailedStatistics(Site site) {
             url = site.getUrl();
             name = site.getName();
-            status = site.getType();
+            status = String.valueOf(site.getType());
             statusTime = (site.getStatusTime().toEpochSecond(ZoneOffset.UTC) - 3 * 3600) * 1000;
             error = site.getLastError();
             pages = Repos.pageRepo.countBySite(site);

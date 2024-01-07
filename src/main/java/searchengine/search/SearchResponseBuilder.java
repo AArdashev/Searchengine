@@ -7,6 +7,7 @@ import searchengine.dto.statistics.SearchResponse;
 import searchengine.model.Index;
 import searchengine.model.Page;
 import searchengine.model.Site;
+import searchengine.model.SiteType;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -101,7 +102,7 @@ public class SearchResponseBuilder implements Runnable {
 
     private void defineLemmaFrequencies() {
         if (request.getSiteUrls().size() == 1) {
-            site = Repos.siteRepo.findByUrlAndType(request.getSiteUrls().get(0), Site.INDEXED)
+            site = Repos.siteRepo.findByUrlAndType(request.getSiteUrls().get(0), String.valueOf(SiteType.INDEXED))
                     .orElse(null);
             if (site == null) {
                 return;
@@ -145,14 +146,14 @@ public class SearchResponseBuilder implements Runnable {
         List<Index> indices = site != null ?
                 Repos.indexRepo.findAllByTextLemmaAndSite(lemma, site) :
                 Repos.indexRepo.findAllByTextLemma(lemma);
-        for (Index index : indices) {
-            PageRelevance relevance = relevanceMap.get(index.getPage().getId());
+        for (Index searchindex : indices) {
+            PageRelevance relevance = relevanceMap.get(searchindex.getPage().getId());
             if (relevance == null) {
                 relevance = new PageRelevance();
-                relevance.setPage(index.getPage());
-                relevanceMap.put(index.getPage().getId(), relevance);
+                relevance.setPage(searchindex.getPage());
+                relevanceMap.put(searchindex.getPage().getId(), relevance);
             }
-            LemmaRank lemmaRank = new LemmaRank(lemma, index.getRank());
+            LemmaRank lemmaRank = new LemmaRank(lemma, searchindex.getRank());
             relevance.getLemmaRanks().add(lemmaRank);
         }
         relevanceSet = new HashSet<>(relevanceMap.values());
@@ -163,12 +164,12 @@ public class SearchResponseBuilder implements Runnable {
         List<Index> indices = site != null ?
                 Repos.indexRepo.findAllByTextLemmaAndSite(lemma, site) :
                 Repos.indexRepo.findAllByTextLemma(lemma);
-        for (Index index : indices) {
-            PageRelevance relevance = relevanceMap.get(index.getPage().getId());
+        for (Index searchindex : indices) {
+            PageRelevance relevance = relevanceMap.get(searchindex.getPage().getId());
             if (!relevanceSet.contains(relevance)) {
                 continue;
             }
-            LemmaRank lemmaRank = new LemmaRank(lemma, index.getRank());
+            LemmaRank lemmaRank = new LemmaRank(lemma, searchindex.getRank());
             relevance.getLemmaRanks().add(lemmaRank);
             lemmaRelevances.add(relevance);
         }

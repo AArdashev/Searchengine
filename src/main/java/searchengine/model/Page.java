@@ -5,7 +5,9 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import javax.persistence.Index;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Table(name = "page")
@@ -35,10 +37,16 @@ public class Page implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
         Page p = (Page) obj;
-        return site == null ||
-                getClass() == obj.getClass() && path.equals(p.path) && site == p.site;
+        return Objects.equals(path, p.path) && Objects.equals(site, p.site);
     }
+
 
     @Override
     public String toString() {

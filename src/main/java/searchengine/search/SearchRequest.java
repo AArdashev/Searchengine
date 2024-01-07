@@ -3,6 +3,7 @@ package searchengine.search;
 import lombok.Data;
 import main.repository.Repos;
 import searchengine.model.Site;
+import searchengine.model.SiteType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,7 @@ public class SearchRequest {
     public SearchRequest buildRequest(String siteUrl, Integer offset, Integer limit) {
 
         if (siteUrl == null) {
-            Repos.siteRepo.findAllByType(Site.INDEXED)
+            Repos.siteRepo.findAllByType(String.valueOf(SiteType.INDEXED))
                     .forEach(site -> siteUrls.add(site.getUrl()));
         } else {
             siteUrls.add(siteUrl);

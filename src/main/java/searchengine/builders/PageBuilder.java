@@ -4,10 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import main.repository.Repos;
 import org.jsoup.nodes.Document;
 import searchengine.config.Props;
-import searchengine.model.Index;
-import searchengine.model.Lemma;
-import searchengine.model.Page;
-import searchengine.model.Site;
+import searchengine.model.*;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -58,10 +55,10 @@ public class PageBuilder implements Runnable {
             lemmas.put(lemma.getLemma(), lemma);
         }
 
-        List<Index> indexList = Repos.indexRepo.findAllBySite(site);
+        List<Index> searchindexList = Repos.indexRepo.findAllBySite(site);
         Map<Integer, Index> indices = new HashMap<>();
-        for (Index index : indexList) {
-            indices.put(index.hashCode(), index);
+        for (Index searchindex : searchindexList) {
+            indices.put(searchindex.hashCode(), searchindex);
         }
 
         IndexBuilder indexBuilder = new IndexBuilder(site, page, lemmas, indices);
@@ -70,10 +67,10 @@ public class PageBuilder implements Runnable {
         List<Lemma> lemmasToDelete = new ArrayList<>();
         if (oldPages != null && oldPages.size() > 0) {
             List<Integer> oldPageIds = oldPages.stream().map(p -> p.getId()).toList();
-            for (Index index : indices.values().stream()
+            for (Index searchindex : indices.values().stream()
                     .filter(index -> oldPageIds.contains(index.getPage().getId()))
                     .toList()) {
-                Lemma lemma = index.getLemma();
+                Lemma lemma = searchindex.getLemma();
                 lemma.setFrequency(lemma.getFrequency() - 1);
                 if (lemma.getFrequency() == 0) {
                     lemmas.remove(lemma.getLemma());
@@ -123,7 +120,7 @@ public class PageBuilder implements Runnable {
         if (!Props.getAllSiteUrls().contains(home)) {
             return NOT_FOUND;
         }
-        Site site = Repos.siteRepo.findByUrlAndType(home, Site.INDEXED).orElse(null);
+        Site site = Repos.siteRepo.findByUrlAndType(home, String.valueOf(SiteType.INDEXED)).orElse(null);
 
         if (path.isEmpty()) {
             SiteBuilder.buildSingleSite(home);

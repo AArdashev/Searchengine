@@ -46,11 +46,11 @@ public class IndexRepositoryImpl implements IndexRepositoryCustom {
 
     private int buildInserts(List<Index> indices, StringBuilder insertBuilder, int currIndex) {
         for (int i = 0; i++ < 100_000 && currIndex < indices.size(); currIndex++) {
-            Index index = indices.get(currIndex);
+            Index searchindex = indices.get(currIndex);
             insertBuilder.append(insertBuilder.length() == 0 ? "" : ",")
-                    .append("(").append(index.getPage().getId())
-                    .append(",").append(index.getLemma().getId())
-                    .append(",").append(index.getRank()).append(")");
+                    .append("(").append(searchindex.getPage().getId())
+                    .append(",").append(searchindex.getLemma().getId())
+                    .append(",").append(searchindex.getRank()).append(")");
         }
         return currIndex;
     }

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import searchengine.config.Props;
 import searchengine.dto.statistics.StatisticsResponse;
 import searchengine.model.Site;
+import searchengine.model.SiteType;
 
 
 import java.time.LocalDateTime;
@@ -56,9 +57,9 @@ public class SiteBuilder implements Runnable {
         viewedPages = new HashSet<>();
 
         Optional<Site> indexingSite =
-                main.repository.Repos.siteRepo.findByUrlAndType(siteUrl, Site.INDEXING);
+                main.repository.Repos.siteRepo.findByUrlAndType(siteUrl, String.valueOf(SiteType.INDEXED));
         if (!indexingSite.isEmpty()) {
-            indexingSite.get().setType(Site.REMOVING);
+            indexingSite.get().setType(SiteType.REMOVING);
             main.repository.Repos.siteRepo.saveAndFlush(indexingSite.get());
         }
 
@@ -67,7 +68,7 @@ public class SiteBuilder implements Runnable {
         site.setUrl(siteUrl);
         site.setStatusTime(LocalDateTime.now());
         site.setSiteBuilder(this);
-        site.setType(Site.INDEXING);
+        site.setType(SiteType.INDEXING);
 
         main.repository.Repos.siteRepo.saveAndFlush(site);
     }
@@ -78,10 +79,11 @@ public class SiteBuilder implements Runnable {
         buildPagesLemmasAndIndices();
 
         if (isStopping()) {
-            Site indexingSite = main.repository.Repos.siteRepo.findByNameAndType(site.getName(), Site.INDEXING)
+            Site indexingSite = main.repository.Repos.siteRepo.findByNameAndType(site.getName(),
+                            String.valueOf(SiteType.INDEXING))
                     .orElse(null);
             if (indexingSite != null) {
-                indexingSite.setType(Site.REMOVING);
+                indexingSite.setType(SiteType.REMOVING);
                 main.repository.Repos.siteRepo.saveAndFlush(indexingSite);
             }
             log.info("Индексация сайта \"" + site.getName() + "\" прервана");
@@ -113,26 +115,28 @@ public class SiteBuilder implements Runnable {
     }
 
     private void setCurrentSiteAsWorking() {
-        Site prevSite = main.repository.Repos.siteRepo.findByNameAndType(site.getName(), Site.INDEXED)
+        Site prevSite = main.repository.Repos.siteRepo.findByNameAndType(site.getName(),
+                        String.valueOf(SiteType.INDEXING))
                 .orElse(null);
         if (prevSite == null) {
-            prevSite = main.repository.Repos.siteRepo.findByNameAndType(site.getName(), Site.FAILED)
+            prevSite = main.repository.Repos.siteRepo.findByNameAndType(site.getName(),
+                            String.valueOf(SiteType.FAILED))
                     .orElse(null);
         }
         if (prevSite != null) {
-            prevSite.setType(Site.REMOVING);
+            prevSite.setType(SiteType.REMOVING);
             main.repository.Repos.siteRepo.saveAndFlush(prevSite);
         }
 
         if (site.getLastError().isEmpty()) {
-            site.setType(Site.INDEXED);
+            site.setType(SiteType.INDEXING);
         } else {
-            site.setType(Site.FAILED);
+            site.setType(SiteType.FAILED);
         }
         main.repository.Repos.siteRepo.saveAndFlush(site);
 
-        synchronized(Site.REMOVING) {
-            main.repository.Repos.siteRepo.deleteByType(Site.REMOVING);
+        synchronized(SiteType.REMOVING) {
+            main.repository.Repos.siteRepo.deleteByType(String.valueOf(SiteType.REMOVING));
         }
     }
 
